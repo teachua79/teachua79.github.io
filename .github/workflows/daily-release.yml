@@ -1,0 +1,153 @@
+name: Daily Snapshot Build of XMage
+
+permissions:
+  contents: write
+
+on:
+  schedule:
+    - cron: "0 2 * * *"   # 2:00 AM UTC
+    - cron: "0 10 * * *"  # 10:00 AM UTC
+    - cron: "0 18 * * *"  # 6:00 PM UTC
+  workflow_dispatch:
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+
+    steps:
+    # Clone latest XMage source
+    - name: Clone upstream XMage repository
+      run: |
+        git clone https://github.com/magefree/mage.git source
+        echo "Upstream XMage source cloned."
+
+    # Install dependencies
+    - name: Install dependencies
+      run: |
+        sudo apt update
+        sudo apt install -y perl zip unzip build-essential libarchive-zip-perl cpanminus maven
+        sudo cpanm --notest Archive::Extract Archive::Zip
+
+    # Build XMage
+    - name: Build XMage
+      run: |
+        cd source/Mage
+        chmod +x ../Utils/build-and-package.pl
+        perl ../Utils/build-and-package.pl
+        echo "Build completed."
+
+    # Version + timestamp
+    - name: Prepare version tag
+      id: version
+      run: |
+        TIMESTAMP=$(date -u +"%Y-%m-%d-%H%M")
+        echo "version=daily-$TIMESTAMP" >> $GITHUB_OUTPUT
+        echo "timestamp=$TIMESTAMP" >> $GITHUB_OUTPUT
+
+    # Rename binary ZIP
+    - name: Detect and rename binary ZIP
+      run: |
+        BUNDLE=$(find source -maxdepth 3 -type f -name "*.zip" | grep -Ei 'mage|client' | head -n1)
+        if [ -z "$BUNDLE" ]; then
+          echo "ERROR: XMage binary ZIP not found."
+          exit 1
+        fi
+        cp "$BUNDLE" "xmage-${{ steps.version.outputs.version }}.zip"
+        echo "Binary renamed to xmage-${{ steps.version.outputs.version }}.zip"
+
+    # Create source snapshots
+    - name: Create Source Snapshots
+      run: |
+        # cd source
+        # zip -r "../xmage-source-${{ steps.version.outputs.version }}.zip" . >/dev/null
+        # tar -czf "../xmage-source-${{ steps.version.outputs.version }}.tar.gz" . >/dev/null
+        # echo "Source code snapshots created."
+
+    # Create GitHub Release
+    - name: Create Release
+      uses: softprops/action-gh-release@v2
+      with:
+        tag_name: ${{ steps.version.outputs.version }}
+        name: ${{ steps.version.outputs.version }}
+        body: |
+          ### Daily Snapshot Build of XMage
+
+          **Important Notes**  
+          These snapshots are intended for testing the latest card implementations, features, and bug fixes. They can be played locally against AI or by hosting your own server. Public XMage servers are not supported by these builds.
+
+          Built from the official XMage source code:  
+          https://github.com/magefree/mage
+
+          XMage Changelog (Commits):
+          https://github.com/magefree/mage/commits/master
+
+        files: |
+          xmage-${{ steps.version.outputs.version }}.zip
+          # xmage-source-${{ steps.version.outputs.version }}.zip
+          # xmage-source-${{ steps.version.outputs.version }}.tar.gz
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    # 🔥 UPDATE config.json 🔥
+    - name: Update config.json with latest release
+      env:
+        SITE_REPO_TOKEN: ${{ secrets.SITE_REPO_TOKEN }}
+      run: |
+        VERSION="${{ steps.version.outputs.version }}"
+        FILENAME="xmage-$VERSION.zip"
+
+        git clone https://github.com/teachua79/teachua79.github.io.git site
+        cd site
+
+        jq --arg version "$VERSION" \
+           --arg filename "$FILENAME" \
+           '
+           .XMage.version = "1.4.58-dev (" + $version + ")"
+           | .XMage.location = "https://github.com/teachua79/teachua79.github.io/releases/download/" + $version + "/" + $filename
+           | .XMage.full = "https://github.com/teachua79/teachua79.github.io/releases/download/" + $version + "/" + $filename
+           ' config.json > config.tmp.json
+
+        mv config.tmp.json config.json
+
+        git config user.name "github-actions"
+        git config user.email "github-actions@github.com"
+
+        git add config.json
+        if git diff --cached --quiet; then
+          echo "No changes to commit"
+        else
+          git commit -m "Update XMage release to $VERSION"
+          git push https://teachua79:${SITE_REPO_TOKEN}@github.com/teachua79/teachua79.github.io.git HEAD:main
+        fi
+
+  cleanup:
+    needs: build-and-release
+    runs-on: ubuntu-latest
+
+    steps:
+
+    # Checkout repo so we can delete tags
+    - name: Checkout repository
+      uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+
+    # Keep only 100 latest releases
+    - name: Delete old releases (keep 100)
+      uses: dev-drprasad/delete-older-releases@v0.3.3
+      with:
+        keep_latest: 100
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      continue-on-error: true
+
+    # Keep only 100 newest tags
+    - name: Delete old tags (keep 100)
+      run: |
+        git fetch --tags
+        TAGS=$(git tag --sort=-creatordate | sed -e '1,100d')
+        for TAG in $TAGS; do
+          if [ -n "$TAG" ]; then
+            git push --delete origin "$TAG" || true
+          fi
+        done
