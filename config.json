@@ -1,0 +1,18 @@
+{
+  "java": {
+    "version": "1.8.0_201",
+    "location": "https://xmage.today/java/jre-8u201-"
+  },
+  "XMage": {
+    "version": "",
+    "location": "",
+    "locations": [],
+    "full": "",
+    "torrent": "",
+    "images": "",
+    "Launcher": {
+      "version": "0.3.8",
+      "location": "https://beta.xmage.today/files/XMageLauncher-0.3.8.jar"
+    }
+  }
+}
