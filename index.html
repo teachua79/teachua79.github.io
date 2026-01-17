@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Daily Snapshot Build of XMage</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <style>
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+                   Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans", sans-serif;
+      line-height: 1.6;
+    }
+
+    main {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 2rem 1.25rem 4rem;
+    }
+
+    h1 {
+      border-bottom: 1px solid #ddd;
+      padding-bottom: 0.5rem;
+    }
+
+    h2 {
+      border-bottom: 1px solid #eee;
+      padding-bottom: 0.3rem;
+      margin-top: 2.5rem;
+    }
+
+    ul, ol {
+      margin-left: 1.5rem;
+    }
+
+    pre {
+      padding: 1rem;
+      overflow-x: auto;
+      background: #f6f8fa;
+    }
+
+    code {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+                   "Liberation Mono", monospace;
+    }
+
+    .note {
+      border-left: 4px solid #0366d6;
+      padding: 1rem 1.25rem;
+      margin: 1.5rem 0;
+      background: #f6f8fa;
+    }
+
+    footer {
+      margin-top: 4rem;
+      padding-top: 2rem;
+      border-top: 1px solid #eee;
+      font-size: 0.9rem;
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Daily Snapshot Build of XMage</h1>
+
+    <p>
+      This repository hosts an <strong>automated GitHub Actions workflow</strong>
+      that builds <strong>daily snapshot releases</strong> of
+      <a href="https://github.com/magefree/mage">XMage</a>, the open-source
+      <em>Magic: The Gathering</em> game engine.
+    </p>
+
+    <p>
+      These snapshots are intended for <strong>testing the latest card implementations, features, and bug fixes</strong>.
+      They can be played locally against AI or by hosting your own server.
+      <strong>Public XMage servers are not supported by these builds.</strong>
+    </p>
+
+    <hr />
+
+    <h2>What This Repository Does</h2>
+    <ul>
+      <li>Clones the official XMage repository on a schedule</li>
+      <li>Builds the latest XMage version using the <code>build-and-package.pl</code> script</li>
+      <li>Generates a timestamped binary ZIP archive</li>
+      <li>Publishes a <strong>GitHub Release</strong> containing the daily snapshot</li>
+      <li>Automatically cleans up old releases and tags (keeps the latest 100)</li>
+    </ul>
+
+    <div class="note">
+      <p>
+        <strong>Note</strong><br />
+        This repository exists <strong>only</strong> for automated snapshot builds.
+        <strong>No support is provided here.</strong>
+        For issues, bug reports, or general XMage questions, please use the official XMage repository.
+      </p>
+    </div>
+
+    <hr />
+
+    <h2>Workflow Schedule</h2>
+    <p>The GitHub Actions workflow runs <strong>three times per day</strong>:</p>
+    <ul>
+      <li><strong>02:00 UTC</strong></li>
+      <li><strong>10:00 UTC</strong></li>
+      <li><strong>18:00 UTC</strong></li>
+    </ul>
+
+    <p>
+      Although builds run multiple times daily, you <strong>do not need to update your client every time</strong>.
+    </p>
+
+    <div class="note">
+      <p>
+        <strong>Note</strong><br />
+        GitHub Actions schedules are subject to runner availability. Delays or skipped runs may occur,
+        and releases may not always appear exactly on schedule.
+      </p>
+    </div>
+
+    <hr />
+
+    <h2>Important Notes</h2>
+    <ul>
+      <li>These builds are <strong>snapshot releases for testing only</strong></li>
+      <li>They may include <strong>unfinished features</strong>, <strong>experimental changes</strong>, or <strong>instability</strong></li>
+      <li>They are <strong>not recommended for official or competitive play</strong></li>
+    </ul>
+
+    <hr />
+
+    <h2>Official XMage Releases</h2>
+    <p>If you are looking for stable, supported versions of XMage, use the official repository:</p>
+    <ul>
+      <li>
+        <strong>XMage Releases:</strong>
+        <a href="https://github.com/magefree/mage/releases">https://github.com/magefree/mage/releases</a>
+      </li>
+      <li>
+        <strong>XMage Changelog (Commits):</strong>
+        <a href="https://github.com/magefree/mage/commits/master">https://github.com/magefree/mage/commits/master</a>
+      </li>
+    </ul>
+
+    <hr />
+
+    <h2>Auto-Update via XMage Launcher</h2>
+    <ol>
+      <li>Open <strong>XMage Launcher → Settings</strong></li>
+      <li>
+        Set <strong>XMage Home</strong> to:
+        <pre><code>https://teachua79.github.io/</code></pre>
+      </li>
+      <li>Click <strong>Check Versions</strong> → <strong>Update</strong></li>
+    </ol>
+
+    <p>
+      This allows your XMage client to stay up to date without manually checking this repository.
+    </p>
+
+    <hr />
+
+    <h2>Manual Update</h2>
+    <p>You may also update manually using the release archives from this repository:</p>
+    <ul>
+      <li>
+        <strong>Daily Snapshot Releases:</strong>
+        <a href="https://github.com/teachua79/teachua79.github.io/releases">
+          https://github.com/teachua79/teachua79.github.io/releases
+        </a>
+      </li>
+    </ul>
+
+    <h3>Steps</h3>
+    <ol>
+      <li>Download and extract the ZIP archive</li>
+      <li>
+        Overwrite the following folders:
+        <ul>
+          <li><code>mage-client</code></li>
+          <li><code>mage-server</code></li>
+        </ul>
+      </li>
+      <li>
+        <strong>Do not delete</strong> the existing <code>mage-client</code> folder before overwriting it
+        (it contains card images inside the <code>plugins</code> directory)
+      </li>
+    </ol>
+
+    <div class="note">
+      <p>
+        <strong>Note</strong><br />
+        Manual updates do <strong>not</strong> change the version number shown in the XMage Launcher.
+        This behavior is expected and can be safely ignored.
+      </p>
+    </div>
+
+    <hr />
+
+    <h2>Release Naming Convention</h2>
+    <p>Release tags and binary filenames follow this format:</p>
+    <pre><code>daily-YYYY-MM-DD-HHMM</code></pre>
+
+    <p><strong>Example:</strong></p>
+    <pre><code>daily-2026-01-15-1830.zip</code></pre>
+
+    <hr />
+
+    <h2>License &amp; Attribution</h2>
+    <p>
+      All source code and build artifacts originate from the official XMage project:
+    </p>
+    <ul>
+      <li>
+        <strong>XMage Repository:</strong>
+        <a href="https://github.com/magefree/mage">https://github.com/magefree/mage</a>
+      </li>
+    </ul>
+
+    <p>
+      This repository contains <strong>automation and build infrastructure only</strong>
+      and does not modify XMage source code.
+    </p>
+
+    <footer>
+      © Daily XMage Snapshot Builds — Automated via GitHub Actions
+    </footer>
+  </main>
+</body>
+</html>
